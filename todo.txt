@@ -1,0 +1,12 @@
+- Define endpoint method "getFeaturedSpeaker"
+- Define endpoint "getConferenceSessions(websafeConferenceKey)"
+- Define endpoint "getConferenceSessionsByType(websafeConferenceKey)"
+- Define endpoint "getSessionsBySpeaker(speaker)"
+- Define endpoint "createSession(SessionForm, websafeConferenceKey)"
+- Define Session class and SessionForm: session name, highlights, speaker, duration, typeOfSession, date, start time (24hr)
+- Define endpoint "addSessionToWishlist(SessionKey)"
+- Define endpoint "getSessionsInWishlist()"
+- Create indexes
+- Come up with 2 additional queries
+- Solve the particular query about sessions before 7pm
+
