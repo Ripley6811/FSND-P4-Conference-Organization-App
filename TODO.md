@@ -1,8 +1,12 @@
 How will I complete this project?
 
-This project is connected to the Developing Scalable Apps with Python courses, but depending on your background knowledge you may not need the entirety of the course to complete this project. Here's what you should do:
+This project is connected to the Developing Scalable Apps with Python courses, 
+but depending on your background knowledge you may not need the entirety of the 
+course to complete this project. Here's what you should do:
 
-1. You do not have to do any work on the frontend part of the application to finish this project. All your added functionality will be testable via APIs Explorer. More in-depth explanation.
+1. You do not have to do any work on the frontend part of the application to 
+    finish this project. All your added functionality will be testable via APIs 
+    Explorer. More in-depth explanation.
 2. Clone the conference application repository.
 3. Add Sessions to a Conference
     Define the following endpoint methods
