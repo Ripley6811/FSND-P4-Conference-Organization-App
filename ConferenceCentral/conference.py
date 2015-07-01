@@ -371,6 +371,7 @@ class ConferenceApi(remote.Service):
                 else:
                     setattr(sf, field.name, getattr(sess, field.name))
             elif field.name == 'websafeKey':
+                # Add datastore key for reference
                 setattr(sf, field.name, sess.key.urlsafe())
         sf.check_initialized()
         return sf
@@ -427,16 +428,20 @@ class ConferenceApi(remote.Service):
                       path='conference/{websafeConferenceKey}/session',
                       http_method='GET', name='getConferenceSessions')
     def getConferenceSessions(self, request):
-        """Given a conference, return all sessions."""
+        """Given a conference, return all sessions in chronological order."""
         wck = request.websafeConferenceKey
         # get Conference object from request; bail if not found
         c_key = ndb.Key(urlsafe=wck)
         if not c_key.get():
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
-        sessions = Session.query(ancestor=c_key)
+
+        # Get sessions for conference ordered by time and return list
+        s_query = Session.query(ancestor=c_key)
+        s_query = s_query.order(Session.date)
+        s_query = s_query.order(Session.startTime)
         return SessionForms(
-            items=[self._copySessionToForm(sess) for sess in sessions]
+            items=[self._copySessionToForm(sess) for sess in s_query]
         )
 
 
@@ -452,8 +457,12 @@ class ConferenceApi(remote.Service):
         if not c_key.get():
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
+
+        # Get sessions for conference and particular type and return list
         s_query = Session.query(ancestor=c_key)
         s_query = s_query.filter(Session.typeOfSession==request.typeOfSession)
+        s_query = s_query.order(Session.date)
+        s_query = s_query.order(Session.startTime)
         return SessionForms(
             items=[self._copySessionToForm(sess) for sess in s_query]
         )
@@ -471,8 +480,12 @@ class ConferenceApi(remote.Service):
         if not c_key.get():
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
+
+        # Get sessions for conference and particular speaker and return list
         s_query = Session.query(ancestor=c_key)
         s_query = s_query.filter(Session.speaker == request.speaker)
+        s_query = s_query.order(Session.date)
+        s_query = s_query.order(Session.startTime)
         return SessionForms(
             items=[self._copySessionToForm(sess) for sess in s_query]
         )
@@ -534,6 +547,10 @@ class ConferenceApi(remote.Service):
 
         # Load entities and return
         sessions = ndb.get_multi(s_keys)
+
+        # Order the sessions by date and time
+        sessions = sorted(sessions, key=lambda s: (s.date, s.startTime))
+
         return SessionForms(
             items=[self._copySessionToForm(sess) for sess in sessions]
         )
@@ -753,9 +770,11 @@ class ConferenceApi(remote.Service):
         # value = "London"
         # f = ndb.query.FilterNode(field, operator, value)
         # q = q.filter(f)
-        q = q.filter(Conference.city=="London")
-        q = q.filter(Conference.topics=="Medical Innovations")
-        q = q.filter(Conference.month==6)
+        q = q.filter(Conference.city == "London")
+        q = q.filter(Conference.topics == "Medical Innovations")
+#        q = q.filter(Conference.month == 6)
+#        q = q.order(Conference.name)
+        q = q.filter(Conference.maxAttendees > 10)
 
         return ConferenceForms(
             items=[self._copyConferenceToForm(conf, "") for conf in q]
