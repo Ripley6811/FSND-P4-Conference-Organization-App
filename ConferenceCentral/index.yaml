@@ -88,12 +88,37 @@ indexes:
   properties:
   - name: month
   - name: topics
+  - name: maxAttendees
+  - name: name
+
+- kind: Conference
+  properties:
+  - name: month
+  - name: topics
+  - name: name
+
+- kind: Conference
+  properties:
+  - name: topics
+  - name: maxAttendees
+  - name: name
+
+- kind: Conference
+  properties:
+  - name: topics
+  - name: month
   - name: name
 
 - kind: Conference
   properties:
   - name: topics
   - name: name
+
+- kind: Session
+  properties:
+  - name: speaker
+  - name: date
+  - name: startTime
 
 - kind: Session
   ancestor: yes

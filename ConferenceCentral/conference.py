@@ -96,7 +96,12 @@ CONF_GET_REQUEST_BY_SPEAKER = endpoints.ResourceContainer(
     speaker=messages.StringField(2),
 )
 
-CONF_POST_REQUEST = endpoints.ResourceContainer(
+SPEAKER_GET_REQUEST = endpoints.ResourceContainer(
+    message_types.VoidMessage,
+    speaker=messages.StringField(1),
+)
+
+CONF_PUT_REQUEST = endpoints.ResourceContainer(
     ConferenceForm,
     websafeConferenceKey=messages.StringField(1),
 )
@@ -109,6 +114,11 @@ SESS_GET_REQUEST = endpoints.ResourceContainer(
 SESS_POST_REQUEST = endpoints.ResourceContainer(
     SessionForm,
     websafeConferenceKey=messages.StringField(1),
+)
+
+SESS_PUT_REQUEST = endpoints.ResourceContainer(
+    SessionForm,
+    websafeSessionKey=messages.StringField(1),
 )
 
 
@@ -144,7 +154,7 @@ class ConferenceApi(remote.Service):
 
 
     def _createConferenceObject(self, request):
-        """Create or update Conference object, returning ConferenceForm/request."""
+        """Create Conference object, returning ConferenceForm/request."""
         # preload necessary data items
         user = endpoints.get_current_user()
         if not user:
@@ -242,7 +252,7 @@ class ConferenceApi(remote.Service):
         return self._createConferenceObject(request)
 
 
-    @endpoints.method(CONF_POST_REQUEST, ConferenceForm,
+    @endpoints.method(CONF_PUT_REQUEST, ConferenceForm,
             path='conference/{websafeConferenceKey}',
             http_method='PUT', name='updateConference')
     def updateConference(self, request):
@@ -378,7 +388,7 @@ class ConferenceApi(remote.Service):
 
 
     def _createSessionObject(self, request):
-        """Create or update Session object, returning SessionForm/request."""
+        """Create Session object, returning SessionForm/request."""
         # get Conference object from request; bail if not found
         wck = request.websafeConferenceKey
         c_key = ndb.Key(urlsafe=wck)
@@ -403,7 +413,7 @@ class ConferenceApi(remote.Service):
         data.pop('websafeConferenceKey', None)
         data.pop('websafeKey', None)
 
-        # convert date/time from strings to Date/Time objects
+        # convert date/time strings to Date/Time objects
         if data['date']:
             data['date'] = datetime.strptime(
                                 data['date'][:10], "%Y-%m-%d").date()
@@ -411,17 +421,86 @@ class ConferenceApi(remote.Service):
             data['startTime'] = datetime.strptime(
                                     data['startTime'][:10], "%H:%M").time()
 
-        # generate Profile Key based on user ID and Session
-        # ID based on Profile key get Session key from ID
+        # Check date is within conference date range (if specified)
+        if conf.startDate and conf.endDate:
+            if data['date'] < conf.startDate or data['date'] > conf.endDate:
+                raise endpoints.BadRequestException(
+                    "Session date is not within conference timeframe.")
+
+        # generate Session Key based on parent key
         s_id = Session.allocate_ids(size=1, parent=c_key)[0]
         s_key = ndb.Key(Session, s_id, parent=c_key)
         data['key'] = s_key
 
-        # create Session, send email to organizer confirming
-        # creation of Session & return (modified) SessionForm
+        # create Session & return (modified) SessionForm
         sess = Session(**data)
         sess.put()
         return self._copySessionToForm(sess)
+
+
+    @ndb.transactional()
+    def _updateSessionObject(self, request):
+        """Update Session object, returning SessionForm/request."""
+        wsk = request.websafeSessionKey
+        user = endpoints.get_current_user()
+        if not user:
+            raise endpoints.UnauthorizedException('Authorization required')
+        user_id = getUserId(user)
+
+        # copy SessionForm/ProtoRPC Message into dict
+        data = {field.name: getattr(request, field.name)
+                for field in request.all_fields()}
+
+        # update existing session
+        s_key = ndb.Key(urlsafe=wsk)
+        sess = s_key.get()
+        # check that session exists
+        if not sess:
+            raise endpoints.NotFoundException(
+                'No session found with key: %s' % wsk)
+
+        # check that user is owner
+        if user_id != s_key.parent().get().organizerUserId:
+            raise endpoints.ForbiddenException(
+                'Only the owner can update the session.')
+
+        # Not getting all the fields, so don't create a new object; just
+        # copy relevant fields from SessionForm to Session object
+        for field in request.all_fields():
+            data = getattr(request, field.name)
+            # only copy fields where we get data
+            if data not in (None, []):
+                # special handling for dates (convert string to Date)
+                if field.name == 'date':
+                    data = datetime.strptime(data, "%Y-%m-%d").date()
+                elif field.name == 'startTime':
+                    data = datetime.strptime(data, "%H:%M").time()
+                # write to Session object
+                setattr(sess, field.name, data)
+
+        # Commit changes and return SessionForm
+        sess.put()
+        return self._copySessionToForm(sess)
+
+
+    @ndb.transactional()
+    def _deleteSessionObject(self, request):
+        """Delete Session object, returning boolean."""
+        # get Session object from request; bail if not found
+        wsk = request.websafeSessionKey
+        s_key = ndb.Key(urlsafe=wsk)
+        if not s_key.get():
+            raise endpoints.NotFoundException(
+                'No session found with key: %s' % wsk)
+
+        # Check login authorization
+        user = endpoints.get_current_user()
+        if not user or getUserId(user) != s_key.parent().get().organizerUserId:
+            raise endpoints.UnauthorizedException('Authorization required')
+
+        # Delete entity and return boolean
+        s_key.delete()
+        return BooleanMessage(data=True)
 
 
     @endpoints.method(CONF_GET_REQUEST, SessionForms,
@@ -468,12 +547,28 @@ class ConferenceApi(remote.Service):
         )
 
 
-    @endpoints.method(CONF_GET_REQUEST_BY_SPEAKER, SessionForms,
-              path='conference/{websafeConferenceKey}/speaker/{speaker}',
+    @endpoints.method(SPEAKER_GET_REQUEST, SessionForms,
+              path='speaker/{speaker}',
               http_method='GET', name='getSessionsBySpeaker')
     def getSessionsBySpeaker(self, request):
         """Given a speaker, return all sessions given by this particular
         speaker, across all conferences."""
+        # Get sessions for particular speaker and return list
+        s_query = Session.query()
+        s_query = s_query.filter(Session.speaker == request.speaker)
+        s_query = s_query.order(Session.date)
+        s_query = s_query.order(Session.startTime)
+        return SessionForms(
+            items=[self._copySessionToForm(sess) for sess in s_query]
+        )
+
+
+    @endpoints.method(CONF_GET_REQUEST_BY_SPEAKER, SessionForms,
+              path='conference/{websafeConferenceKey}/speaker/{speaker}',
+              http_method='GET', name='getConferenceSessionsBySpeaker')
+    def getConferenceSessionsBySpeaker(self, request):
+        """Given a conference and speaker, return all sessions given by this
+        particular speaker at this particular conference."""
         wck = request.websafeConferenceKey
         # get Conference object from request; bail if not found
         c_key = ndb.Key(urlsafe=wck)
@@ -497,6 +592,22 @@ class ConferenceApi(remote.Service):
     def createSession(self, request):
         """Create a session. Open only to the organizer of the conference."""
         return self._createSessionObject(request)
+
+
+    @endpoints.method(SESS_PUT_REQUEST, SessionForm,
+                      path='session/{websafeSessionKey}',
+                      http_method='PUT', name='updateSession')
+    def updateSession(self, request):
+        """Update session with provided fields & return with updated info."""
+        return self._updateSessionObject(request)
+
+
+    @endpoints.method(SESS_GET_REQUEST, BooleanMessage,
+                      path='session/{websafeSessionKey}',
+                      http_method='DELETE', name='deleteSession')
+    def deleteSession(self, request):
+        """Delete a session. Open only to the organizer of the conference."""
+        return self._deleteSessionObject(request)
 
 
     @endpoints.method(SESS_GET_REQUEST, BooleanMessage,
@@ -545,8 +656,8 @@ class ConferenceApi(remote.Service):
         # Filter the keys with the correct conference parent key
         s_keys = [k for k in s_keys if k.parent() == c_key]
 
-        # Load entities and return
-        sessions = ndb.get_multi(s_keys)
+        # Load entities, skipping deleted sessions (NoneType)
+        sessions = [s for s in ndb.get_multi(s_keys) if s]
 
         # Order the sessions by date and time
         sessions = sorted(sessions, key=lambda s: (s.date, s.startTime))

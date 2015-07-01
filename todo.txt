@@ -9,4 +9,5 @@
 - Create indexes
 - Come up with 2 additional queries
 - Solve the particular query about sessions before 7pm
+- Getting all sessions by speaker needs connection to conference as well
 

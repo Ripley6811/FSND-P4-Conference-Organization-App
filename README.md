@@ -15,6 +15,7 @@
 [Protocal RPC field classes](https://cloud.google.com/appengine/docs/python/tools/protorpc/messages/fieldclasses)
 [Using Datastore](https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingdatastore)
 [How to avoid issuing RPCs in a loop](https://cloud.google.com/appengine/docs/python/ndb/entities)
+[GAE Local testing](https://cloud.google.com/appengine/docs/python/tools/localunittesting)
 
 
 ##Process

@@ -40,6 +40,9 @@ handlers:       # static then dynamic
   script: conference.api
   secure: always
 
+- url: /tests
+  script: main.app
+
 libraries:
 
 - name: webapp2

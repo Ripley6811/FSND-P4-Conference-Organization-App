@@ -125,12 +125,12 @@ class Session(ndb.Model):
 
 class SessionForm(messages.Message):
     """SessionForm -- Session outbound form message"""
-    name            = messages.StringField(1, required=True)
+    name            = messages.StringField(1)
     highlights      = messages.StringField(2)
     speaker         = messages.StringField(3, repeated=True)
     typeOfSession   = messages.StringField(4)
-    date            = messages.StringField(5, required=True)  # DateTimeField()
-    startTime       = messages.StringField(6, required=True)
+    date            = messages.StringField(5)  # DateTimeField()
+    startTime       = messages.StringField(6)
     duration        = messages.IntegerField(7)
     websafeKey      = messages.StringField(8)
 #    conferenceName  = messages.StringField(9)

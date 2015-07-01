@@ -13,6 +13,7 @@ created by wesc on 2014 may 24
 __author__ = 'wesc+api@google.com (Wesley Chun)'
 
 import webapp2
+import unittest
 from google.appengine.api import app_identity
 from google.appengine.api import mail
 from conference import ConferenceApi
@@ -37,8 +38,20 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
                 'conferenceInfo')
         )
 
+class TestSuiteHandler(webapp2.RequestHandler):
+
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.write("=======\n Tests \n=======\n\n")
+        suite = unittest.TestSuite()
+        suite.addTest(unittest.TestLoader().discover('localtesting'))
+        # TextTestRunner requires `flush`able output. Alias it to `write`
+        self.response.flush = lambda x='': self.response.write(x)
+        unittest.TextTestRunner(self.response).run(suite)
+
 
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
     ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
+    ('/tests', TestSuiteHandler),
 ], debug=True)
