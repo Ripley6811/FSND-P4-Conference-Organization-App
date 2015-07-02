@@ -38,15 +38,15 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
                 'conferenceInfo')
         )
 
+        
 class TestSuiteHandler(webapp2.RequestHandler):
-
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write("=======\n Tests \n=======\n\n")
         suite = unittest.TestSuite()
         suite.addTest(unittest.TestLoader().discover('localtesting'))
-        # TextTestRunner requires `flush`able output. Alias it to `write`
-        self.response.flush = lambda x='': self.response.write(x)
+        # TextTestRunner requires flush-able stream. Add empty function.
+        self.response.flush = lambda: None
         unittest.TextTestRunner(self.response).run(suite)
 
 

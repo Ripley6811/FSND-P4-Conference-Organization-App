@@ -1,21 +1,17 @@
-import sys
-#sys.path.insert(1, 'C:\\Program Files (x86)\\Google\\google_appengine')
-#sys.path.insert(1, 'C:\\Program Files (x86)\\Google\\google_appengine\\lib\\yaml\\lib')
-#sys.path.insert(1, 'google-cloud-sdk/platform/google_appengine')
-#sys.path.insert(1, 'google-cloud-sdk/platform/google_appengine/lib/yaml/lib')
-#sys.path.insert(1, '..')
-
 import unittest
 
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
+from google.appengine.ext.db import BadValueError
 from google.appengine.ext import testbed
 
 from models import Conference
+from models import Session
+from datetime import date, time
 
 
 class DatstoreTestCase(unittest.TestCase):
-
+    #### SET UP and TEAR DOWN ####
     def setUp(self):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
@@ -33,9 +29,19 @@ class DatstoreTestCase(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
+    #### TESTS ####
+    def test_new_conference_fails(self):
+        with self.assertRaises(BadValueError):
+            Conference().put()
+
+    def test_new_session_fails(self):
+        with self.assertRaises(BadValueError):
+            Session().put()
+
     def test_new_conference(self):
         Conference(name='Test').put()
         self.assertEqual(1, len(Conference.query().fetch(2)))
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_new_session(self):
+        Session(name='TestSess', date=date(2015,1,2), startTime=time(7)).put()
+        self.assertEqual(1, len(Session.query().fetch(2)))
