@@ -18,6 +18,7 @@
 - [GAE Local testing](https://cloud.google.com/appengine/docs/python/tools/localunittesting)
 - [How to integrate local testing as endpoint](https://www.altamiracorp.com/blog/employee-posts/unit-testing-google-app-engine)
 - [`unittest` documentation](https://docs.python.org/2/library/unittest.html#unittest.TextTestRunner)
+- [webapp2 Response class documentation](https://webapp-improved.appspot.com/api/webapp2.html#webapp2.Response)
 
 
 ##Process

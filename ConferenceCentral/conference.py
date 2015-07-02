@@ -409,7 +409,7 @@ class ConferenceApi(remote.Service):
         # copy SessionForm/ProtoRPC Message into dict
         data = {field.name: getattr(request, field.name)
                 for field in request.all_fields()}
-        data.pop('conferenceName', None)
+        data['conferenceKey'] = wck
         data.pop('websafeConferenceKey', None)
         data.pop('websafeKey', None)
 
