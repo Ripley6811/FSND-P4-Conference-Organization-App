@@ -13,7 +13,9 @@ created by wesc on 2014 apr 21
 __author__ = 'wesc+api@google.com (Wesley Chun)'
 
 
+from os import environ
 from datetime import datetime
+from functools import wraps
 
 import endpoints
 from protorpc import messages
@@ -22,6 +24,7 @@ from protorpc import remote
 
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
+from google.appengine.api import users
 from google.appengine.ext import ndb
 
 from models import ConflictException
@@ -122,6 +125,36 @@ SESS_PUT_REQUEST = endpoints.ResourceContainer(
 )
 
 
+# - - - Decorators - - - - - - - - - - - - - - - - - - - - - -
+
+TEST_APP = True
+TEST_WITH_MOCK_AUTH = True  # Mock authorization always on
+def checks_authorization(func):
+    """Decorator for first checking user login state before proceeding
+    with function. Raises 401 unauthorized error if not logged in. Passes
+    `user_id` as kwarg to the wrapped function.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # If testing app, ensure it is running on dev_appserver localhost
+        if TEST_APP and environ['SERVER_SOFTWARE'].startswith('Dev'):
+            if TEST_WITH_MOCK_AUTH:
+                # Always authorized
+                user = users.User(email='authorize@all.com')
+            else:
+                # Use current user if it exists
+                user = users.get_current_user()
+            if not user:
+                raise endpoints.UnauthorizedException('Authorization required')
+        else:
+            # Endpoints login check
+            user = endpoints.get_current_user()
+            if not user:
+                raise endpoints.UnauthorizedException('Authorization required')
+
+        return func(*args, user=user, **kwargs)
+    return wrapper
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -153,14 +186,10 @@ class ConferenceApi(remote.Service):
         return cf
 
 
-    def _createConferenceObject(self, request):
+    @checks_authorization
+    def _createConferenceObject(self, request, user=None):
         """Create Conference object, returning ConferenceForm/request."""
-        # preload necessary data items
-        user = endpoints.get_current_user()
-        if not user:
-            raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
-
         if not request.name:
             raise endpoints.BadRequestException("Conference 'name' field required")
 
@@ -198,21 +227,18 @@ class ConferenceApi(remote.Service):
         # create Conference, send email to organizer confirming
         # creation of Conference & return (modified) ConferenceForm
         Conference(**data).put()
-        taskqueue.add(params={'email': user.email(),
+        taskqueue.add(params={'email': p_key.get().mainEmail,
             'conferenceInfo': repr(request)},
             url='/tasks/send_confirmation_email'
         )
         return request
 
 
-    @ndb.transactional()
-    def _updateConferenceObject(self, request):
-        user = endpoints.get_current_user()
-        if not user:
-            raise endpoints.UnauthorizedException('Authorization required')
-        user_id = getUserId(user)
-
+    @checks_authorization
+    @ndb.transactional
+    def _updateConferenceObject(self, request, user=None):
         # copy ConferenceForm/ProtoRPC Message into dict
+        user_id = getUserId(user)
         data = {field.name: getattr(request, field.name) for field in request.all_fields()}
 
         # update existing conference
@@ -278,12 +304,9 @@ class ConferenceApi(remote.Service):
     @endpoints.method(message_types.VoidMessage, ConferenceForms,
             path='getConferencesCreated',
             http_method='POST', name='getConferencesCreated')
-    def getConferencesCreated(self, request):
+    @checks_authorization
+    def getConferencesCreated(self, request, user=None):
         """Return conferences created by user."""
-        # make sure user is authed
-        user = endpoints.get_current_user()
-        if not user:
-            raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
 
         # create ancestor query for all key matches for this user
@@ -291,7 +314,8 @@ class ConferenceApi(remote.Service):
         prof = ndb.Key(Profile, user_id).get()
         # return set of ConferenceForm objects per Conference
         return ConferenceForms(
-            items=[self._copyConferenceToForm(conf, getattr(prof, 'displayName')) for conf in confs]
+            items=[self._copyConferenceToForm(conf, getattr(prof, 'displayName'))
+                   for conf in confs]
         )
 
 
@@ -387,8 +411,10 @@ class ConferenceApi(remote.Service):
         return sf
 
 
-    def _createSessionObject(self, request):
+    @checks_authorization
+    def _createSessionObject(self, request, user=None):
         """Create Session object, returning SessionForm/request."""
+        user_id = getUserId(user)
         # get Conference object from request; bail if not found
         wck = request.websafeConferenceKey
         c_key = ndb.Key(urlsafe=wck)
@@ -397,10 +423,10 @@ class ConferenceApi(remote.Service):
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
 
-        # Check login authorization
-        user = endpoints.get_current_user()
-        if not user or getUserId(user) != conf.organizerUserId:
-            raise endpoints.UnauthorizedException('Authorization required')
+        # Check editing authorization. Creater and user match
+        if user_id != conf.organizerUserId:
+            raise endpoints.ForbiddenException(
+                'Only conference creator may add sessions')
 
         if not request.name or not request.date or not request.startTime:
             raise endpoints.BadRequestException(
@@ -438,14 +464,12 @@ class ConferenceApi(remote.Service):
         return self._copySessionToForm(sess)
 
 
-    @ndb.transactional()
-    def _updateSessionObject(self, request):
+    @checks_authorization
+    @ndb.transactional
+    def _updateSessionObject(self, request, user=None):
         """Update Session object, returning SessionForm/request."""
-        wsk = request.websafeSessionKey
-        user = endpoints.get_current_user()
-        if not user:
-            raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
+        wsk = request.websafeSessionKey
 
         # copy SessionForm/ProtoRPC Message into dict
         data = {field.name: getattr(request, field.name)
@@ -483,20 +507,17 @@ class ConferenceApi(remote.Service):
         return self._copySessionToForm(sess)
 
 
-    @ndb.transactional()
-    def _deleteSessionObject(self, request):
+    @checks_authorization
+    @ndb.transactional
+    def _deleteSessionObject(self, request, user=None):
         """Delete Session object, returning boolean."""
+        user_id = getUserId(user)
         # get Session object from request; bail if not found
         wsk = request.websafeSessionKey
         s_key = ndb.Key(urlsafe=wsk)
         if not s_key.get():
             raise endpoints.NotFoundException(
                 'No session found with key: %s' % wsk)
-
-        # Check login authorization
-        user = endpoints.get_current_user()
-        if not user or getUserId(user) != s_key.parent().get().organizerUserId:
-            raise endpoints.UnauthorizedException('Authorization required')
 
         # Delete entity and return boolean
         s_key.delete()
@@ -684,15 +705,11 @@ class ConferenceApi(remote.Service):
         return pf
 
 
-    def _getProfileFromUser(self):
+    @checks_authorization
+    def _getProfileFromUser(self, user=None):
         """Return user Profile from datastore, creating new one if non-existent."""
-        # make sure user is authed
-        user = endpoints.get_current_user()
-        if not user:
-            raise endpoints.UnauthorizedException('Authorization required')
-
-        # get Profile from datastore
         user_id = getUserId(user)
+        # get Profile from datastore
         p_key = ndb.Key(Profile, user_id)
         profile = p_key.get()
         # create new Profile if not there

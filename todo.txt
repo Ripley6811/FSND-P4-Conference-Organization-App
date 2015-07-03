@@ -1,4 +1,4 @@
-- Define endpoint method "getFeaturedSpeaker" (using Memcache)
+- Define endpoint method "getFeaturedSpeaker" (using Memcache and possibly _after_put_hook)
 + Define endpoint "getConferenceSessions(websafeConferenceKey)"
 + Define endpoint "getConferenceSessionsByType(websafeConferenceKey)"
 + Define endpoint "getSessionsBySpeaker(speaker)"

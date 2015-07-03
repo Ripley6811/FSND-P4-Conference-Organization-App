@@ -12,6 +12,7 @@ created by wesc on 2014 may 24
 
 __author__ = 'wesc+api@google.com (Wesley Chun)'
 
+from os import environ
 import webapp2
 import unittest
 from google.appengine.api import app_identity
@@ -42,14 +43,23 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
 
 class TestSuiteHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write("=======\n Tests \n=======\n\n")
+        localtest = environ['SERVER_SOFTWARE'].startswith('Dev')
         suite = unittest.TestSuite()
-        suite.addTest(unittest.TestLoader().discover('localtesting'))
+        loader = unittest.TestLoader()
+        self.response.headers['Content-Type'] = 'text/plain'
+        if localtest:
+            self.response.write("=================\n")
+            self.response.write(" Localhost Tests \n")
+            self.response.write("=================\n\n")
+            suite.addTest(loader.discover('tests', 'test_*.py'))
+        else:
+            self.response.write("==================\n")
+            self.response.write(" Deployment Tests \n")
+            self.response.write("==================\n\n")
+            suite.addTest(loader.discover('tests', 'test_datastore.py'))
         # TextTestRunner requires flush-able stream. Add empty function.
         self.response.flush = lambda: None
         unittest.TextTestRunner(self.response).run(suite)
-
 
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
