@@ -7,6 +7,7 @@ main.py -- Udacity conference server-side Python App Engine
 $Id$
 
 created by wesc on 2014 may 24
+modified by JWJ on 2015 Jul 3
 
 """
 
@@ -43,16 +44,19 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
 
 class TestSuiteHandler(webapp2.RequestHandler):
     def get(self):
+        # Test if running on dev_appserver or cloud server
         localtest = environ['SERVER_SOFTWARE'].startswith('Dev')
         suite = unittest.TestSuite()
         loader = unittest.TestLoader()
         self.response.headers['Content-Type'] = 'text/plain'
         if localtest:
+            # Run all available tests
             self.response.write("=================\n")
             self.response.write(" Localhost Tests \n")
             self.response.write("=================\n\n")
-            suite.addTest(loader.discover('tests', 'test_*.py'))
+            suite.addTest(loader.discover('tests'))
         else:
+            # Run only datastore tests
             self.response.write("==================\n")
             self.response.write(" Deployment Tests \n")
             self.response.write("==================\n\n")
@@ -60,6 +64,7 @@ class TestSuiteHandler(webapp2.RequestHandler):
         # TextTestRunner requires flush-able stream. Add empty function.
         self.response.flush = lambda: None
         unittest.TextTestRunner(self.response).run(suite)
+
 
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
