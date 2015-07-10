@@ -99,6 +99,11 @@ indexes:
 
 - kind: Conference
   properties:
+  - name: seatsAvailable
+  - name: name
+
+- kind: Conference
+  properties:
   - name: topics
   - name: maxAttendees
   - name: name
@@ -139,8 +144,3 @@ indexes:
   - name: typeOfSession
   - name: date
   - name: startTime
-
-- kind: Conference
-  properties:
-  - name: seatsAvailable
-  - name: name

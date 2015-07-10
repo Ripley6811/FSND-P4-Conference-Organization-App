@@ -54,13 +54,15 @@ class TestSuiteHandler(webapp2.RequestHandler):
             self.response.write("=================\n")
             self.response.write(" Localhost Tests \n")
             self.response.write("=================\n\n")
-            suite.addTest(loader.discover('tests'))
+            suite.addTest(loader.discover('tests', 'test_datastore.py'))
+            suite.addTest(loader.discover('tests', 'test_endpoints.py'))
         else:
             # Run only datastore tests
             self.response.write("==================\n")
             self.response.write(" Deployment Tests \n")
             self.response.write("==================\n\n")
             suite.addTest(loader.discover('tests', 'test_datastore.py'))
+            suite.addTest(loader.discover('tests', 'test_unauth*.py'))
         # TextTestRunner requires flush-able stream. Add empty function.
         self.response.flush = lambda: None
         unittest.TextTestRunner(self.response).run(suite)

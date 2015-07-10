@@ -303,7 +303,8 @@ class ConferenceApi(remote.Service):
 
     @endpoints.method(message_types.VoidMessage, ConferenceForms,
             path='getConferencesCreated',
-            http_method='POST', name='getConferencesCreated')
+            # 2015 Jul 4, JWJ, Changed from POST to GET
+            http_method='GET', name='getConferencesCreated')
     @checks_authorization
     def getConferencesCreated(self, request, user=None):
         """Return conferences created by user."""
