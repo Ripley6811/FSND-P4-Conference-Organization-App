@@ -1,4 +1,4 @@
-- Define endpoint method "getFeaturedSpeaker" (using Memcache and possibly _after_put_hook)
++ Define endpoint method "getFeaturedSpeaker" (using Memcache and possibly _after_put_hook)
 + Define endpoint "getConferenceSessions(websafeConferenceKey)"
 + Define endpoint "getConferenceSessionsByType(websafeConferenceKey)"
 + Define endpoint "getSessionsBySpeaker(speaker)"
@@ -8,7 +8,8 @@
 + Define endpoint "getSessionsInWishlist()"
 - Create indexes
 - Come up with 2 additional queries
-- Solve the particular query about sessions before 7pm
+- Solve the particular query about sessions before 7pm (Use GQL?)
 - Getting all sessions by speaker needs connection to conference as well
 + Add "updateSession" endpoint
+- README: Include all steps for running application
 

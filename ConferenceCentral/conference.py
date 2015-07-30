@@ -462,6 +462,13 @@ class ConferenceApi(remote.Service):
         # create Session & return (modified) SessionForm
         sess = Session(**data)
         sess.put()
+
+        # Set new featured speaker in memcache if necessary
+        for speaker in data['speaker']:
+            sessions = self._conferenceSessionsBySpeaker(wck, speaker)
+            if sessions.count() >= 2:
+                memcache.set(key="featuredSpeaker_" + wck, value=speaker)
+
         return self._copySessionToForm(sess)
 
 
@@ -585,13 +592,7 @@ class ConferenceApi(remote.Service):
         )
 
 
-    @endpoints.method(CONF_GET_REQUEST_BY_SPEAKER, SessionForms,
-              path='conference/{websafeConferenceKey}/speaker/{speaker}',
-              http_method='GET', name='getConferenceSessionsBySpeaker')
-    def getConferenceSessionsBySpeaker(self, request):
-        """Given a conference and speaker, return all sessions given by this
-        particular speaker at this particular conference."""
-        wck = request.websafeConferenceKey
+    def _conferenceSessionsBySpeaker(self, wck, speaker):
         # get Conference object from request; bail if not found
         c_key = ndb.Key(urlsafe=wck)
         if not c_key.get():
@@ -600,11 +601,26 @@ class ConferenceApi(remote.Service):
 
         # Get sessions for conference and particular speaker and return list
         s_query = Session.query(ancestor=c_key)
-        s_query = s_query.filter(Session.speaker == request.speaker)
+        # NOTE: Should this be "IN"
+        s_query = s_query.filter(Session.speaker == speaker)
         s_query = s_query.order(Session.date)
         s_query = s_query.order(Session.startTime)
+        return s_query
+
+
+
+    @endpoints.method(CONF_GET_REQUEST_BY_SPEAKER, SessionForms,
+              path='conference/{websafeConferenceKey}/speaker/{speaker}',
+              http_method='GET', name='getConferenceSessionsBySpeaker')
+    def getConferenceSessionsBySpeaker(self, request):
+        """Given a conference and speaker, return all sessions given by this
+        particular speaker at this particular conference."""
+        sessions = self._conferenceSessionsBySpeaker(
+                            request.websafeConferenceKey,
+                            request.speaker
+        )
         return SessionForms(
-            items=[self._copySessionToForm(sess) for sess in s_query]
+            items=[self._copySessionToForm(sess) for sess in sessions]
         )
 
 
@@ -687,6 +703,20 @@ class ConferenceApi(remote.Service):
         return SessionForms(
             items=[self._copySessionToForm(sess) for sess in sessions]
         )
+
+
+    @endpoints.method(CONF_GET_REQUEST, StringMessage,
+                      path='conference/featuredspeaker',
+                      http_method='GET', name='getFeaturedSpeaker')
+    def getFeaturedSpeaker(self, request):
+        """Get the name of the currently featured speaker for a conference"""
+        wck = request.websafeConferenceKey
+        # get Conference object from request; bail if not found
+        c_key = ndb.Key(urlsafe=wck)
+        if not c_key.get():
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % wck)
+        return StringMessage(data=memcache.get('featuredSpeaker_' + wck) or "")
 
 
 # - - - Profile objects - - - - - - - - - - - - - - - - - - -

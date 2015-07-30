@@ -1,5 +1,7 @@
 #Conference Central App
 
+###Localhost:8080
+To run a server on localhost open CMD in project root directory and run `dev_appserver ConferenceCentral`.
 
 
 ##Links
