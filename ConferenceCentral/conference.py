@@ -14,7 +14,7 @@ __author__ = 'wesc+api@google.com (Wesley Chun)'
 
 
 from os import environ
-from datetime import datetime
+from datetime import datetime, time
 from functools import wraps
 
 import endpoints
@@ -717,6 +717,37 @@ class ConferenceApi(remote.Service):
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
         return StringMessage(data=memcache.get('featuredSpeaker_' + wck) or "")
+
+
+    @endpoints.method(CONF_GET_REQUEST, SessionForms,
+                      path='conference/{websafeConferenceKey}/typeandtime',
+                      http_method='GET', name='getTypeAndTime')
+    def getTypeAndTime(self, request):
+        """Get the result for a special query.
+
+        This method tests the solution to the non-workshop & before 7pm query
+        problem."""
+        wck = request.websafeConferenceKey
+        # get Conference object from request; bail if not found
+        c_key = ndb.Key(urlsafe=wck)
+        if not c_key.get():
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % wck)
+
+
+        # Get sessions for conference and particular speaker and return list
+        s_query = Session.query(ancestor=c_key)
+        # NOTE: Should this be "IN"
+        s_query = s_query.filter(Session.typeOfSession != 'workshop')
+        s_query = s_query.order(Session.typeOfSession)
+        s_query = s_query.order(Session.date)
+        s_query = s_query.order(Session.startTime)
+
+        records = [sess for sess in s_query if sess.startTime < time(19)]
+
+        return SessionForms(
+            items=[self._copySessionToForm(sess) for sess in records]
+        )
 
 
 # - - - Profile objects - - - - - - - - - - - - - - - - - - -

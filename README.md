@@ -3,6 +3,12 @@
 ###Localhost:8080
 To run a server on localhost open CMD in project root directory and run `dev_appserver ConferenceCentral`.
 
+Query problem points out the restriction that an inequality filter can only be applied to one property.
+Non-workshop sessions is one inequality filter and sessions before 7pm is an inequality filter on a different property.
+One way around this is to retrieve the results from one filter and then proceed to programmatically filter the results by the other property.
+The best way is to filter for session type, then take advantage of query ordering of type, date and time. Followed by
+a programmatic filter to remove sessions starting at 7pm or later. This is implemented in the `getTypeAndTime` endpoint
+for demonstration. This endpoint can be expanded upon but is currently hardcoded to demonstrate solving a multiple inequalities of different properties problem.
 
 ##Links
 

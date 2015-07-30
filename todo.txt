@@ -7,7 +7,7 @@
 + Define endpoint "addSessionToWishlist(SessionKey)"
 + Define endpoint "getSessionsInWishlist()"
 - Create indexes
-- Come up with 2 additional queries
+- Come up with 2 additional queries - IS THIS DONE? update and delete session methods added
 - Solve the particular query about sessions before 7pm (Use GQL?)
 - Getting all sessions by speaker needs connection to conference as well
 + Add "updateSession" endpoint
