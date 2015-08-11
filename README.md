@@ -15,19 +15,19 @@ Warning: "You are exploring an API that is described or served via HTTP instead 
 Right click on the shield at the end of the address bar and then click "load unsafe scripts".
 
 ###Sessions
-"Explain how sessions and speakers are implemented including design decisions behind additional functionality."
+> "Explain how sessions and speakers are implemented including design decisions behind additional functionality."
 
 ###Wishlist
-"Explain how the wishlist works."
+> "Explain how the wishlist works."
 
 ###Additional Queries (Endpoints)
-"List the additional endpoints and explain their implementation and design."
+> "List the additional endpoints and explain their implementation and design."
 
 ###Problematic Query
-"Explain the query problem and describe the solution."
+> "Explain the query problem and describe the solution."
 
 ###Featured Speaker
-"Explain how the featured speaker was implemented."
+> "Explain how the featured speaker was implemented."
 
 ###Running Tests
 #####Localhost testing — `http://localhost:8080/tests`
