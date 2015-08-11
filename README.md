@@ -1,24 +1,29 @@
 #Conference Central App
-> "Explain the steps required to successfully run the application."
+> Steps required to successfully run the application.
 
-I spent a lot of time learning how to do testing. One confusing problem after
-another but I prevailed. I hope going above and beyond with testing makes up
-for just meeting minimum requirements in other areas or the project.
 
-###Localhost:8080
-To run a server on localhost open CMD in project root directory and
-run `dev_appserver ConferenceCentral`.
+####Using localhost server
+To run a server on localhost open a terminal or cmd prompt in project root
+directory and run `dev_appserver ConferenceCentral`. Then the application
+web site can be found at http://localhost:8080.
 
-Chrome usage tip:
-Warning: "You are exploring an API that is described or served via HTTP
-instead of HTTPS..."
-Right click on the shield at the end of the address bar and then click
+APIS-Explorer for local app is https://apis-explorer.appspot.com/apis-explorer/?base=http%3A%2F%2Flocalhost%3A8080%2F_ah%2Fapi#p/conference/v1/
+
+**Warning:** On **Chrome**, you may get the following message:
+*"You are exploring an API that is described or served via HTTP instead of HTTPS..."*
+To resolve this, right-click on the shield at the end of the address bar and then click
 "load unsafe scripts".
+
+####Using deployment server
+The deployed application URL is https://nice-tiger.appspot.com
+
+APIS-Explorer for deployed web site is https://apis-explorer.appspot.com/apis-explorer/?base=https%3A%2F%2Fnice-tiger.appspot.com%2F_ah%2Fapi#p/conference/v1/
+
 
 
 ###Sessions
-> "Explain how sessions and speakers are implemented including design decisions
-behind the additional functionality."
+> Sessions and speakers implementation including design decisions
+behind the additional functionality.
 
 *Related endpoints:*
 - `createSession`
@@ -37,7 +42,7 @@ multiple records.
 
 
 ###Wishlist
-> "Explain how the wishlist works."
+> How the wishlist works.
 
 *Related endpoints:*
 - `addSessionToWishlist`
@@ -45,20 +50,20 @@ multiple records.
 
 Sessions are added to a profile as a list of session datastore keys.
 The endpoint `getSessionsInWishlist` requires a conference key and processes the list of
-session keys in the profile. A list of sessions is returned belong to a
+session keys in the profile. A list of sessions is returned belonging to a
 particular conference.
 
 
 ###Additional Queries (Endpoints)
-> "List the additional endpoints and explain their implementation and design."
+> List additional endpoints and their implementation and design.
 
 *Related endpoints:*
-- `getConferenceSessionsBySpeaker`
 - `updateSession`
 - `deleteSession`
+- `getConferenceSessionsBySpeaker`
 
 I added the (obvious) methods of *updating* and *deleting* sessions. These
-were closely based on the conference endpoints but also check whether the
+were closely based on the conference endpoints. They check if the
 user has authority to make changes by being the conference creator.
 
 I also added an endpoint to return all sessions by a speaker in a particular
@@ -66,7 +71,9 @@ conference.
 
 
 ###Problematic Query
-> "Explain the query problem and describe the solution."
+> How would you handle a query for all non-workshop sessions before 7 pm?
+What is the problem with implementing this query?
+What ways to solve it did you think of?
 
 *Related endpoints:*
 - `getTypeAndTime`
@@ -89,7 +96,7 @@ different properties in a query.
 
 
 ###Featured Speaker
-> "Explain how the featured speaker was implemented."
+> Implementation of the featured speaker endpoint.
 
 *Related endpoints:*
 - `getFeaturedSpeaker`
@@ -103,12 +110,16 @@ endpoint.
 ###Running Tests
 ####Localhost testing — `http://localhost:8080/tests`
 Run the localhost server with `dev_appserver ConferenceCentral`.
-Localhost testing uses a mock user account and tests endpoints using that user.
+Localhost testing uses a mock user account and tests endpoints with that user.
 Run localhost tests by going to the `http://localhost:8080/tests` url.
 
 **Note:** Localhost tests may fail on the first run. Something to do with
 the *stubs* not activating properly after an update. Refresh (hit F5) the
 browser and all tests should pass on the following attempts.
+
+Endpoint testing includes the `getTypeAndTime` endpoint and *wishlist* related
+endpoints.
+
 ####Deployment testing — `https://nice-tiger.appspot.com/tests`
 Deployed testing does not use a mock user account and tests that the endpoints
 give the proper unauthorized response messages.
