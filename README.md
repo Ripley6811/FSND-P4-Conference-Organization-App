@@ -5,7 +5,7 @@
 ####Using localhost server
 To run a server on localhost open a terminal or cmd prompt in project root
 directory and run `dev_appserver ConferenceCentral`. Then the application
-web site can be found at http://localhost:8080.
+web site can be found at http://localhost:8080 .
 
 APIS-Explorer for local app is https://apis-explorer.appspot.com/apis-explorer/?base=http%3A%2F%2Flocalhost%3A8080%2F_ah%2Fapi#p/conference/v1/
 
@@ -79,7 +79,7 @@ What ways to solve it did you think of?
 - `getTypeAndTime`
 
 The special query problem points out the restriction that an inequality
-filter can only be applied to one property.
+filter can only be applied to one property within a single query.
 "Non-workshop sessions" is one inequality filter related to *type*
 and "sessions before 7pm"
 is an inequality filter on a different property regarding *time*.
@@ -91,8 +91,8 @@ a programmatic filter to remove sessions starting at 7pm or later.
 
 This is implemented in the `getTypeAndTime` endpoint
 for demonstration. This endpoint can be expanded upon but is currently
-hardcoded to demonstrate one solution to applying multiple inequalities of
-different properties in a query.
+hardcoded to demonstrate one solution to applying two inequalities of
+different properties in a single request.
 
 
 ###Featured Speaker
@@ -108,9 +108,23 @@ endpoint.
 
 
 ###Running Tests
+I spent a lot of time learning how to implement tests. The initial idea was to
+have a test suite ensure
+that everything works properly rather than testing each endpoint manually.
+Numerous strange
+problems had to be overcome. How to simulate a user for authenticated testing and
+how to use and reset a **test datastore** for each test are just a couple that I
+needed to resolve.
+
+Logging in and out *during* tests proved too complicated so my solution was to
+do all authenticated testing locally with a mock user account and unauthenticated
+testing on the deployed app. In other words, localhost testing ensures
+authenticated actions work correctly and deployed testing ensures
+**non**-authenticated responses are correct.
+
+
 ####Localhost testing — `http://localhost:8080/tests`
 Run the localhost server with `dev_appserver ConferenceCentral`.
-Localhost testing uses a mock user account and tests endpoints with that user.
 Run localhost tests by going to the `http://localhost:8080/tests` url.
 
 **Note:** Localhost tests may fail on the first run. Something to do with
@@ -123,7 +137,7 @@ endpoints.
 ####Deployment testing — `https://nice-tiger.appspot.com/tests`
 Deployed testing does not use a mock user account and tests that the endpoints
 give the proper unauthorized response messages.
-Run deployment tests by going to the `https://nice-tiger.appspot.com/tests` url.
+Run deployment tests by going to the https://nice-tiger.appspot.com/tests url.
 
 
 ##Links
