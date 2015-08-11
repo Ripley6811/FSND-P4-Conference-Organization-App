@@ -10,6 +10,17 @@ The best way is to filter for session type, then take advantage of query orderin
 a programmatic filter to remove sessions starting at 7pm or later. This is implemented in the `getTypeAndTime` endpoint
 for demonstration. This endpoint can be expanded upon but is currently hardcoded to demonstrate solving a multiple inequalities of different properties problem.
 
+Chrome usage tip:
+Warning: "You are exploring an API that is described or served via HTTP instead of HTTPS..."
+Right click on the shield at the end of the address bar and then click "load unsafe scripts".
+
+Running tests:
+Localhost testing uses a mock user account and tests endpoints using that user.
+Run localhost tests by going to the `http://localhost:8080/tests` url.
+Deployed testing does not use a mock user account and tests that the endpoints give the proper unauthorized response messages.
+Run deployment tests by going to the `https://nice-tiger.appspot.com/tests` url.
+The first load of `tests` page often fails with a server error or timeout. Reload the page (F5) and all tests should pass.
+
 ##Links
 
 - [Conference Central Site](https://nice-tiger.appspot.com/#/)

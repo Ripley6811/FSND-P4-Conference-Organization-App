@@ -654,7 +654,8 @@ class ConferenceApi(remote.Service):
     def addSessionToWishlist(self, request):
         """Add session to user's wishlist."""
         wsk = request.websafeSessionKey
-        prof = self._getProfileFromUser()  # get user Profile
+        # get user Profile
+        prof = self._getProfileFromUser()
         # check if session exists
         s_key = ndb.Key(urlsafe=wsk)
         if not s_key.get():
@@ -680,7 +681,8 @@ class ConferenceApi(remote.Service):
     def getSessionsInWishlist(self, request):
         """Get a list of all sessions in user's wishlist for a particular
         conference."""
-        prof = self._getProfileFromUser()  # get user Profile
+        # get user Profile
+        prof = self._getProfileFromUser()
         wck = request.websafeConferenceKey
         # get Conference object from request; bail if not found
         c_key = ndb.Key(urlsafe=wck)
