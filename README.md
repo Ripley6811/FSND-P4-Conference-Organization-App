@@ -17,25 +17,53 @@ Right click on the shield at the end of the address bar and then click "load uns
 ###Sessions
 > "Explain how sessions and speakers are implemented including design decisions behind additional functionality."
 
+*Related endpoints:*
+- `createSession`
+- `getConferenceSessions`
+- `getConferenceSessionsByType`
+- `getSessionsBySpeaker`
+
 ###Wishlist
 > "Explain how the wishlist works."
+
+*Related endpoints:*
+- `addSessionToWishlist`
+- `getSessionsInWishlist`
 
 ###Additional Queries (Endpoints)
 > "List the additional endpoints and explain their implementation and design."
 
+*Related endpoints:*
+- `getConferenceSessionsBySpeaker`
+- `updateSession`
+- `deleteSession`
+
+
 ###Problematic Query
 > "Explain the query problem and describe the solution."
+
+*Related endpoints:*
+- `getTypeAndTime`
 
 ###Featured Speaker
 > "Explain how the featured speaker was implemented."
 
+*Related endpoints:*
+- `getFeaturedSpeaker`
+
+A featured speaker is stored in *memcache* when submitting new sessions and if
+it is discovered that the speaker already has other sessions in the database.
+This is detected and updated during the call to the **conference.createSession**
+endpoint.
+
 ###Running Tests
-#####Localhost testing — `http://localhost:8080/tests`
+####Localhost testing — `http://localhost:8080/tests`
 Run the localhost server with `dev_appserver ConferenceCentral`.
 Localhost testing uses a mock user account and tests endpoints using that user.
 Run localhost tests by going to the `http://localhost:8080/tests` url.
-Note: Localhost tests usually fail on the first run. Something to do with the *stubs* not activating properly after an update. Refresh (hit F5) the browser and all tests should pass on the following attempts.
-#####Deployment testing — `https://nice-tiger.appspot.com/tests`
+
+**Note:** Localhost tests may fail on the first run. Something to do with the *stubs* not activating properly after an update. Refresh (hit F5) the browser and all tests should pass on the following attempts.
+####Deployment testing — `https://nice-tiger.appspot.com/tests`
 Deployed testing does not use a mock user account and tests that the endpoints give the proper unauthorized response messages.
 Run deployment tests by going to the `https://nice-tiger.appspot.com/tests` url.
 The first load of `tests` page often fails with a server error or timeout. Reload the page (F5) and all tests should pass.
