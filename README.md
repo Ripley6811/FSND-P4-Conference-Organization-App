@@ -14,12 +14,32 @@ Chrome usage tip:
 Warning: "You are exploring an API that is described or served via HTTP instead of HTTPS..."
 Right click on the shield at the end of the address bar and then click "load unsafe scripts".
 
-Running tests:
+###Sessions
+"Explain how sessions and speakers are implemented including design decisions behind additional functionality."
+
+###Wishlist
+"Explain how the wishlist works."
+
+###Additional Queries (Endpoints)
+"List the additional endpoints and explain their implementation and design."
+
+###Problematic Query
+"Explain the query problem and describe the solution."
+
+###Featured Speaker
+"Explain how the featured speaker was implemented."
+
+###Running Tests
+#####Localhost testing — `http://localhost:8080/tests`
+Run the localhost server with `dev_appserver ConferenceCentral`.
 Localhost testing uses a mock user account and tests endpoints using that user.
 Run localhost tests by going to the `http://localhost:8080/tests` url.
+Note: Localhost tests usually fail on the first run. Something to do with the *stubs* not activating properly after an update. Refresh (hit F5) the browser and all tests should pass on the following attempts.
+#####Deployment testing — `https://nice-tiger.appspot.com/tests`
 Deployed testing does not use a mock user account and tests that the endpoints give the proper unauthorized response messages.
 Run deployment tests by going to the `https://nice-tiger.appspot.com/tests` url.
 The first load of `tests` page often fails with a server error or timeout. Reload the page (F5) and all tests should pass.
+
 
 ##Links
 
@@ -58,3 +78,5 @@ based on CONF_POST_REQUEST.
     - Query and reverse order
 - `query.fetch(10)`
     - Get 10 records
+- `query.get()`
+    - Returns first record or `None`
