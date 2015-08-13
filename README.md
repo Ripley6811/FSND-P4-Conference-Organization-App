@@ -17,7 +17,7 @@ To resolve this, right-click on the shield at the end of the address bar and the
 ####Using deployment server
 The deployed application URL is https://nice-tiger.appspot.com
 
-APIS-Explorer for deployed web site is https://apis-explorer.appspot.com/apis-explorer/?base=https%3A%2F%2Fnice-tiger.appspot.com%2F_ah%2Fapi#p/conference/v1/
+APIS-Explorer for the deployed web site is https://apis-explorer.appspot.com/apis-explorer/?base=https%3A%2F%2Fnice-tiger.appspot.com%2F_ah%2Fapi#p/conference/v1/
 
 
 
@@ -34,6 +34,10 @@ behind the additional functionality.
 The `Session` model and related endpoints were implemented much like the
 `Conference` model and endpoints. With some session specific data, such as
 having a reference to the parent Conference and a list of speakers.
+
+Modeled the `createSession` method on the `updateConference` method because
+it takes a conference key and a set of parameters. Created the SESS_POST_REQUEST
+based on CONF_POST_REQUEST.
 
 Speakers were implemented as a list in the `Session` model. Sessions sometimes
 have multiple speakers and this was also a good way to learn how to use
@@ -85,9 +89,13 @@ and "sessions before 7pm"
 is an inequality filter on a different property regarding *time*.
 One way around this is to retrieve the results using one filter and then
 proceed to programmatically filter the results by the other property.
-The best way is to filter for session type, then take advantage of query
-ordering of type, date and time. Followed by
-a programmatic filter to remove sessions starting at 7pm or later.
+The best way is to first filter for session *type*. Then take advantage of query
+ordering of *type*, then *date* and *time*. Follow this with
+a programmed filter to remove sessions starting at 7pm or later.
+
+If filtering by *startTime* first, then
+we cannot order by *date* before *startTime* because of another restriction where
+the first ordering property must match the filtering property.
 
 This is implemented in the `getTypeAndTime` endpoint
 for demonstration. This endpoint can be expanded upon but is currently
@@ -157,14 +165,6 @@ Run deployment tests by going to the https://nice-tiger.appspot.com/tests url.
 - [How to integrate local testing as endpoint](https://www.altamiracorp.com/blog/employee-posts/unit-testing-google-app-engine)
 - [`unittest` documentation](https://docs.python.org/2/library/unittest.html#unittest.TextTestRunner)
 - [webapp2 Response class documentation](https://webapp-improved.appspot.com/api/webapp2.html#webapp2.Response)
-
-
-##Process
-
-- Stared for a long time at resources.
-- Modeled the `createSession` method on the `updateConference` method because
-it takes a conference key and a set of parameters. Created the SESS_POST_REQUEST
-based on CONF_POST_REQUEST.
 
 
 ##Datastore notes

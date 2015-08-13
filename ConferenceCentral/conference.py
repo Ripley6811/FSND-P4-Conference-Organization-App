@@ -7,6 +7,7 @@ conference.py -- Udacity conference server-side Python App Engine API;
 $Id: conference.py,v 1.25 2014/05/24 23:42:19 wesc Exp wesc $
 
 created by wesc on 2014 apr 21
+modifed by JWJ on 2015 aug 12
 
 """
 
@@ -662,12 +663,12 @@ class ConferenceApi(remote.Service):
             raise endpoints.NotFoundException(
                 'No session found with key: %s' % wsk)
 
-        # check if user already registered otherwise add
+        # check if user already added session
         if wsk in prof.sessionKeysToAttend:
             raise ConflictException(
                 "You have already added this session to your wishlist")
 
-        # register user, take away one seat
+        # Add session key to the list in user profile
         prof.sessionKeysToAttend.append(wsk)
 
         # write things back to the datastore & return
@@ -718,6 +719,7 @@ class ConferenceApi(remote.Service):
         if not c_key.get():
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
+        # Return memcache string for a particular conference
         return StringMessage(data=memcache.get('featuredSpeaker_' + wck) or "")
 
 
@@ -727,8 +729,8 @@ class ConferenceApi(remote.Service):
     def getTypeAndTime(self, request):
         """Get the result for a special query.
 
-        This method tests the solution to the non-workshop & before 7pm query
-        problem."""
+        This method demonstrates the solution to the non-workshop & before
+        7pm query problem."""
         wck = request.websafeConferenceKey
         # get Conference object from request; bail if not found
         c_key = ndb.Key(urlsafe=wck)
@@ -736,10 +738,8 @@ class ConferenceApi(remote.Service):
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % wck)
 
-
         # Get sessions for conference and particular speaker and return list
         s_query = Session.query(ancestor=c_key)
-        # NOTE: Should this be "IN"
         s_query = s_query.filter(Session.typeOfSession != 'workshop')
         s_query = s_query.order(Session.typeOfSession)
         s_query = s_query.order(Session.date)
