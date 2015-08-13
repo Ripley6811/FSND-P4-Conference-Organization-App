@@ -32,10 +32,10 @@ behind the additional functionality.
 - `getSessionsBySpeaker`
 
 The `Session` model and related endpoints were implemented much like the
-`Conference` model and endpoints. With some session specific data, such as
+`Conference` model and endpoints. Session specific data fields were included, such as
 having a reference to the parent Conference and a list of speakers.
 
-Modeled the `createSession` method on the `updateConference` method because
+The `createSession` method was modeled on the `updateConference` method because
 it takes a conference key and a set of parameters. Created the SESS_POST_REQUEST
 based on CONF_POST_REQUEST.
 
