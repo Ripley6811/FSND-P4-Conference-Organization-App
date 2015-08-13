@@ -44,6 +44,8 @@ have multiple speakers and this was also a good way to learn how to use
 list-related queries, particularly how to find one person within the lists of
 multiple records.
 
+The session *name*, *date*, *startTime*, and *conferenceKey* are required.
+
 
 ###Wishlist
 > How the wishlist works.
