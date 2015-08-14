@@ -3,6 +3,7 @@ import json
 from time import sleep
 
 from google.appengine.api import memcache
+from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 from google.appengine.api import urlfetch
 from google.appengine.ext import testbed
@@ -27,6 +28,9 @@ class EndpointsTestCase(unittest.TestCase):
 #        self.testbed.init_urlfetch_stub()  # !!RECURSION DEPTH EXCEEDED
         self.testbed.init_memcache_stub()
         ndb.get_context().clear_cache()
+#        self.testbed.init_taskqueue_stub()
+#        self.taskqueue_stub = self.testbed.get_stub(
+#            testbed.TASKQUEUE_SERVICE_NAME)
 #        ndb.get_context().set_cache_policy(False)
         self.urlbase = 'http://{0}/_ah/api/conference/v1'.format(
                                 get_default_version_hostname())

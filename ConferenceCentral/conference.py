@@ -228,8 +228,9 @@ class ConferenceApi(remote.Service):
         # create Conference, send email to organizer confirming
         # creation of Conference & return (modified) ConferenceForm
         Conference(**data).put()
-        taskqueue.add(params={'email': p_key.get().mainEmail,
-            'conferenceInfo': repr(request)},
+        taskqueue.add(
+            params={'email': p_key.get().mainEmail,
+                    'conferenceInfo': repr(request)},
             url='/tasks/send_confirmation_email'
         )
         return request
@@ -464,11 +465,12 @@ class ConferenceApi(remote.Service):
         sess = Session(**data)
         sess.put()
 
-        # Set new featured speaker in memcache if necessary
+        # Send speaker names to taskqueue for processing featured speaker
         for speaker in data['speaker']:
-            sessions = self._conferenceSessionsBySpeaker(wck, speaker)
-            if sessions.count() >= 2:
-                memcache.set(key="featuredSpeaker_" + wck, value=speaker)
+            taskqueue.add(
+                url='/tasks/set_featured_speaker',
+                params={'speaker': speaker, 'websafeConferenceKey': wck}
+            )
 
         return self._copySessionToForm(sess)
 
@@ -593,7 +595,8 @@ class ConferenceApi(remote.Service):
         )
 
 
-    def _conferenceSessionsBySpeaker(self, wck, speaker):
+    @staticmethod
+    def _conferenceSessionsBySpeaker(wck, speaker):
         # get Conference object from request; bail if not found
         c_key = ndb.Key(urlsafe=wck)
         if not c_key.get():

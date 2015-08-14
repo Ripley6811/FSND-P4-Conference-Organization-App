@@ -18,6 +18,7 @@ import webapp2
 import unittest
 from google.appengine.api import app_identity
 from google.appengine.api import mail
+from google.appengine.api import memcache
 from conference import ConferenceApi
 
 
@@ -42,6 +43,16 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
         )
 
 
+class SetFeaturedSpeakerHandler(webapp2.RequestHandler):
+    def post(self):
+        wck = self.request.get('websafeConferenceKey')
+        speaker = self.request.get('speaker')
+        # Set new featured speaker in memcache if necessary
+        sessions = ConferenceApi._conferenceSessionsBySpeaker(wck, speaker)
+        if sessions.count() >= 2:
+            memcache.set(key="featuredSpeaker_" + wck, value=speaker)
+
+
 class TestSuiteHandler(webapp2.RequestHandler):
     def get(self):
         # Test if running on dev_appserver or cloud server
@@ -50,14 +61,14 @@ class TestSuiteHandler(webapp2.RequestHandler):
         loader = unittest.TestLoader()
         self.response.headers['Content-Type'] = 'text/plain'
         if localtest:
-            # Run all available tests
+            # Run datastore and authorized endpoint tests
             self.response.write("=================\n")
             self.response.write(" Localhost Tests \n")
             self.response.write("=================\n\n")
             suite.addTest(loader.discover('tests', 'test_datastore.py'))
             suite.addTest(loader.discover('tests', 'test_endpoints.py'))
         else:
-            # Run only datastore tests
+            # Run datastore and UNauthorized enpoint tests
             self.response.write("==================\n")
             self.response.write(" Deployment Tests \n")
             self.response.write("==================\n\n")
@@ -71,5 +82,6 @@ class TestSuiteHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
     ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
+    ('/tasks/set_featured_speaker', SetFeaturedSpeakerHandler),
     ('/tests', TestSuiteHandler),
 ], debug=True)

@@ -44,6 +44,16 @@ have multiple speakers and this was also a good way to learn how to use
 list-related queries, particularly how to find one person within the lists of
 multiple records.
 
+*Session Fields*
+- **name** is the name of the session and is type *string*
+- **highlights** is a *string* description
+- **speaker** is an *array of strings* to accomodate multiple speakers
+- **typeOfSession** is a short *string* description of session
+- **date** uses the *date* property type
+- **startTime** uses the *time* property type
+- **duration** is an *integer* representing session duration in minutes
+- **conferenceKey** is a convenience reference to parent Conference as a websafe *string*
+
 The session *name*, *date*, *startTime*, and *conferenceKey* are required.
 
 
@@ -113,8 +123,12 @@ different properties in a single request.
 
 If a speaker for a new session is discovered to already have other conference
 sessions, then that speaker's name is stored as a string in *memcache*.
-This is detected and updated during each call to the **conference.createSession**
-endpoint.
+
+This is detected during each call to the **conference.createSession**
+endpoint. A task is added to the default *push queue* for each speaker in the
+new session's speaker list. The task runs the **SetFeaturedSpeakerHandler** (main.py) which
+updates the memcache key for a particular conference with a new speaker name (string)
+if the speaker already has other sessions in the datastore.
 
 
 ###Running Tests
