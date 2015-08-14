@@ -35,6 +35,7 @@ handlers:       # static then dynamic
 
 - url: /tasks/set_featured_speaker
   script: main.app
+  login: admin
 
 - url: /crons/set_announcement
   script: main.app
